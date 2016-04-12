@@ -1,12 +1,18 @@
 package main
 
 import (
+	"encoding/json"
 	log "github.com/Sirupsen/logrus"
 	"github.com/hashicorp/vault/api"
+	"github.com/spf13/viper"
+	"github.com/teabough/docker-startup-script/config"
 	"io/ioutil"
 	"os"
-	"encoding/json"
 	"syscall"
+)
+
+const (
+	fileContainingTempToken = "/tmp/temp_alpine"
 )
 
 func init() {
@@ -19,32 +25,41 @@ func init() {
 }
 
 type EnvconsulConfig struct {
-	Consul   string            `json:"consul,omitempty"`
-	Token    string            `json:"token,omitempty"`
-	Sanitize bool               `json:"sanitize,omitempty"`
-	Vault    *VaultConfig       `json:"vault,omitempty"`
+	Consul   string       `json:"consul,omitempty"`
+	Token    string       `json:"token,omitempty"`
+	Sanitize bool         `json:"sanitize,omitempty"`
+	Vault    *VaultConfig `json:"vault,omitempty"`
 }
 
 type VaultConfig struct {
-	Address string            `json:"address,omitempty"`
-	Token   string            `json:"token"`
+	Address string `json:"address,omitempty"`
+	Token   string `json:"token"`
 }
 
 func main() {
 
-	config := api.DefaultConfig()
-	config.Address = "http://localhost:8200"
+	if err := config.ReadConfig(); err != nil {
+		log.Fatal(err)
+	}
+	envconsulPath := viper.GetString("Envconsul.Path")
+	consulURL := viper.GetString("Consul.Url")
+	vaultURL := viper.GetString("Vault.Url")
 
-	vault, err := api.NewClient(config)
+	vaultConfig := api.DefaultConfig()
+	vaultConfig.Address = vaultURL
+
+	vault, err := api.NewClient(vaultConfig)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	content, err := ioutil.ReadFile("/tmp/temp_alpine")
+	//GET TEMP TOKEN
+	content, err := ioutil.ReadFile(fileContainingTempToken)
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	//GET PERM TOKEN
 	vault.SetToken(string(content))
 	log.WithFields(log.Fields{
 		"token": string(content),
@@ -59,16 +74,16 @@ func main() {
 		log.Fatal(err)
 	}
 
-	vaultConfig := &VaultConfig{
-		Address: "http://127.0.0.1:8200",
-		Token: permSecret.Data["token"].(string),
+	vaultConfigStruct := &VaultConfig{
+		Address: vaultURL,
+		Token:   permSecret.Data["token"].(string),
 	}
 
 	envconsulConfig := &EnvconsulConfig{
-		Consul: "http://127.0.0.1:8500",
-		Token: "toto",
+		Consul:   consulURL,
+		Token:    "toto",
 		Sanitize: true,
-		Vault: vaultConfig,
+		Vault:    vaultConfigStruct,
 	}
 
 	res, err := json.Marshal(envconsulConfig)
@@ -81,11 +96,11 @@ func main() {
 		log.Fatal(err)
 	}
 
-	args := []string{"envconsul","-config", "/tmp/envconsul_config.json", "env"}
+	args := []string{"envconsul", "-config", "/tmp/envconsul_config.json", "env"}
 
 	env := os.Environ()
 
-	execErr := syscall.Exec("/home/tibo/go/src/github.com/teabough/docker-startup-script/", args, env)
+	execErr := syscall.Exec(envconsulPath, args, env)
 
 	if execErr != nil {
 		log.Fatal(execErr)
