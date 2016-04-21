@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	fileContainingTempToken = "/tmp/temp_alpine"
+	pathContainingTempToken = "/tmp/"
 )
 
 func init() {
@@ -54,7 +54,7 @@ func main() {
 	}
 
 	//GET TEMP TOKEN
-	content, err := ioutil.ReadFile(fileContainingTempToken)
+	content, err := ioutil.ReadFile(pathContainingTempToken + "temp_" + os.Getenv("APP_NAME"))
 	if err != nil {
 		log.Fatal(err)
 	}
