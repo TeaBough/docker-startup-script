@@ -8,6 +8,7 @@ import (
 	"github.com/teabough/docker-startup-script/config"
 	"io/ioutil"
 	"os"
+	"strings"
 	"syscall"
 )
 
@@ -54,7 +55,7 @@ func main() {
 	}
 
 	//GET TEMP TOKEN
-	content, err := ioutil.ReadFile(pathContainingTempToken + "temp_" + os.Getenv("APP_NAME"))
+	content, err := ioutil.ReadFile(pathContainingTempToken + "temp_" + strings.Replace(os.Getenv("MARATHON_APP_DOCKER_IMAGE"), "/", "_", -1))
 	if err != nil {
 		log.Fatal(err)
 	}
