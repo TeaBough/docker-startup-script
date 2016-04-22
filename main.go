@@ -2,14 +2,16 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	log "github.com/Sirupsen/logrus"
+	consulApi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/vault/api"
 	"github.com/spf13/viper"
 	"github.com/teabough/docker-startup-script/config"
 	"io/ioutil"
 	"os"
 	"strings"
-	"syscall"
+	"os/exec"
 )
 
 const (
@@ -29,11 +31,13 @@ type EnvconsulConfig struct {
 	Consul   string       `json:"consul,omitempty"`
 	Token    string       `json:"token,omitempty"`
 	Sanitize bool         `json:"sanitize,omitempty"`
+	Upcase   bool         `json:"upcase,omitempty"`
 	Vault    *VaultConfig `json:"vault,omitempty"`
 }
 
 type VaultConfig struct {
 	Address string `json:"address,omitempty"`
+	Renew   bool   `json:"renew"`
 	Token   string `json:"token"`
 }
 
@@ -78,6 +82,7 @@ func main() {
 
 	vaultConfigStruct := &VaultConfig{
 		Address: vaultURL,
+		Renew:   false,
 		Token:   permSecret.Data["token"].(string),
 	}
 
@@ -85,6 +90,7 @@ func main() {
 		Consul:   consulURL,
 		Token:    consulToken,
 		Sanitize: true,
+		Upcase:   true,
 		Vault:    vaultConfigStruct,
 	}
 
@@ -99,15 +105,39 @@ func main() {
 	}
 	log.Info("envconsul config written")
 
-	args := []string{"envconsul", "-config", "/envconsul_config.json", "env"}
+	consulConfig := consulApi.DefaultConfig()
+	consulConfig.Address = consulURL
+	consulConfig.Token = consulToken
 
-	env := os.Environ()
+	client, err := consulApi.NewClient(consulConfig)
 
-	execErr := syscall.Exec(envconsulPath, args, env)
+	pair, _, err := client.KV().Get("secrets-permissions/" + os.Getenv("APP_NAME"), nil)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	if execErr != nil {
-		log.Warn("Something went wrong with envconsul command")
-		log.Fatal(execErr)
+	secrets := strings.Split(string(pair.Value), ",")
+	secretsCmd := ""
+	for _, secret := range secrets {
+		secretsCmd = fmt.Sprintf("%s-secret secret/%s", secretsCmd, secret)
+	}
+
+	cmd := "/envconsul -config /envconsul_config.json -once " + secretsCmd + " env"
+
+	fmt.Println("command is ", cmd)
+	// splitting head => g++ parts => rest of the command
+	parts := strings.Fields(cmd)
+	head := parts[0]
+	parts = parts[1:len(parts)]
+
+	out, err := exec.Command(head, parts...).Output()
+	fmt.Printf("%s", out)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"envconsulPath": envconsulPath,
+			"args":          cmd,
+		}).Warn("Something went wrong with envconsul command")
+		log.Fatal(err)
 	}
 
 	log.Info("DONNNEEEE")

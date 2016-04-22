@@ -20,6 +20,11 @@
 			"Rev": "9a7733345ff091c5457cb963f498a79ecd0bdbaa"
 		},
 		{
+			"ImportPath": "github.com/hashicorp/consul/api",
+			"Comment": "v0.6.4-241-g7637116",
+			"Rev": "763711686ae954b603d58a0980180ab5a910655d"
+		},
+		{
 			"ImportPath": "github.com/hashicorp/errwrap",
 			"Rev": "7554cd9344cec97297fa6649b055a8c98c2a1e55"
 		},
@@ -68,9 +73,14 @@
 			"Rev": "32f2911ca2c1700edfe45a51c41c6858a8ea31f3"
 		},
 		{
+			"ImportPath": "github.com/hashicorp/serf/coordinate",
+			"Comment": "v0.7.0-47-g598c548",
+			"Rev": "598c54895cc5a7b1a24a398d635e8c0ea0959870"
+		},
+		{
 			"ImportPath": "github.com/hashicorp/vault/api",
-			"Comment": "v0.5.2-150-g58c98e5",
-			"Rev": "58c98e5242f1039a46fd6fcec611ff4762d9e2cb"
+			"Comment": "v0.5.2-183-g25bc14b",
+			"Rev": "25bc14b344d19ff1c1c83c1bd29d497be4ff80dc"
 		},
 		{
 			"ImportPath": "github.com/kr/pretty",
