@@ -15,6 +15,10 @@ func ReadConfig() error {
 		return errors.New("CONSUL_URL is not defined")
 	}
 
+	if !viper.IsSet("Consul.Token") {
+		return errors.New("CONSUL_TOKEN is not defined")
+	}
+
 	if !viper.IsSet("EnvConsul.Path") {
 		return errors.New("ENVCONSUL_PATH is not defined")
 	}

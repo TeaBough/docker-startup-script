@@ -45,6 +45,7 @@ func main() {
 	envconsulPath := viper.GetString("Envconsul.Path")
 	consulURL := viper.GetString("Consul.Url")
 	vaultURL := viper.GetString("Vault.Url")
+	consulToken := viper.GetString("Consul.Token")
 
 	vaultConfig := api.DefaultConfig()
 	vaultConfig.Address = vaultURL
@@ -82,7 +83,7 @@ func main() {
 
 	envconsulConfig := &EnvconsulConfig{
 		Consul:   consulURL,
-		Token:    "toto",
+		Token:    consulToken,
 		Sanitize: true,
 		Vault:    vaultConfigStruct,
 	}
@@ -96,6 +97,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Info("envconsul config written")
 
 	args := []string{"envconsul", "-config", "/envconsul_config.json", "env"}
 
@@ -104,6 +106,7 @@ func main() {
 	execErr := syscall.Exec(envconsulPath, args, env)
 
 	if execErr != nil {
+		log.Warn("Something went wrong with envconsul command")
 		log.Fatal(execErr)
 	}
 
