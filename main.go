@@ -92,12 +92,12 @@ func main() {
 		log.Fatal(err)
 	}
 
-	err = ioutil.WriteFile("/tmp/envconsul_config.json", res, 0644)
+	err = ioutil.WriteFile("/envconsul_config.json", res, 0644)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	args := []string{"envconsul", "-config", "/tmp/envconsul_config.json", "env"}
+	args := []string{"envconsul", "-config", "/envconsul_config.json", "env"}
 
 	env := os.Environ()
 
