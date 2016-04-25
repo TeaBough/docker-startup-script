@@ -10,8 +10,8 @@ import (
 	"github.com/teabough/docker-startup-script/config"
 	"io/ioutil"
 	"os"
-	"strings"
 	"os/exec"
+	"strings"
 )
 
 const (
@@ -60,7 +60,7 @@ func main() {
 	}
 
 	//GET TEMP TOKEN
-	content, err := ioutil.ReadFile(pathContainingTempToken + "temp_" + strings.Replace(os.Getenv("MARATHON_APP_DOCKER_IMAGE"), "/", "_", -1))
+	content, err := ioutil.ReadFile(pathContainingTempToken + "temp_" + os.Getenv("HOSTNAME"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -111,7 +111,7 @@ func main() {
 
 	client, err := consulApi.NewClient(consulConfig)
 
-	pair, _, err := client.KV().Get("secrets-permissions/" + os.Getenv("APP_NAME"), nil)
+	pair, _, err := client.KV().Get("secrets-permissions/"+os.Getenv("APP_NAME"), nil)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -128,7 +128,7 @@ func main() {
 	// splitting head => g++ parts => rest of the command
 	parts := strings.Fields(cmd)
 	head := parts[0]
-	parts = parts[1:len(parts)]
+	parts = parts[1:]
 
 	out, err := exec.Command(head, parts...).Output()
 	fmt.Printf("%s", out)
