@@ -119,7 +119,7 @@ func main() {
 	secrets := strings.Split(string(pair.Value), ",")
 	secretsCmd := ""
 	for _, secret := range secrets {
-		secretsCmd = fmt.Sprintf("%s-secret secret/%s", secretsCmd, secret)
+		secretsCmd = fmt.Sprintf("%s -secret secret/%s", secretsCmd, secret)
 	}
 
 	cmd := "/envconsul -config /envconsul_config.json -once " + secretsCmd + " env"
